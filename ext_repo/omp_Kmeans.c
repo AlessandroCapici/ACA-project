@@ -37,6 +37,13 @@ void threadedClustering(int tID, int N, int K, int num_threads, float *data_poin
   int start = tID * length_per_thread;
   int end = start + length_per_thread;
 
+  /*
+  * (secondo noi e' sbagliata)
+  *
+  *
+  *
+  ********************************************************************************************************************
+  */
   if (end > N)
   {
     end = N;
@@ -46,18 +53,24 @@ void threadedClustering(int tID, int N, int K, int num_threads, float *data_poin
   double min_distance, current_distance;
   int *current_cluster_id = (int *)malloc(sizeof(int) * length_per_thread); // The cluster ID to which the data point belong to after each iteration
 
+  // numero di volte che viene eseguito il while
   int iteration_count = 0;
 
   while ((delta_global > THRESHOLD) && (iteration_count < MAX_ITERATIONS))
   {
     float *current_centroid = (float *)calloc(K * 3, sizeof(float)); // Coordinates of the centroids which are calculated at the end of each iteration
     int *cluster_count = (int *)calloc(K, sizeof(int));              // No. of data points which belongs to each cluster at the end of each iteration. Initialised to zero
+   
     for (int i = start; i < end; i++)
     {
       min_distance = __DBL_MAX__; // min_distance is assigned the largest possible double value
 
-      for (int j = 0; j < K; j++)
+	  for (int j = 0; j < K; j++)
       {
+      	//ogni ciclo indica "un cambio centroide"
+      	/*
+      	calcola per ogni punto le distanze da TUTTI i centroidi, per poi fare il minimo
+      	*/
         current_distance = findEuclideanDistance((data_points + (i * 3)), (centroids_global + (iteration_count * K + j) * 3));
         if (current_distance < min_distance)
         {
@@ -68,12 +81,13 @@ void threadedClustering(int tID, int N, int K, int num_threads, float *data_poin
 
       cluster_count[current_cluster_id[i - start]]++;
 
+	  //sarebbe la sommatoria di x con i
       current_centroid[current_cluster_id[i - start] * 3] += data_points[(i * 3)];
       current_centroid[current_cluster_id[i - start] * 3 + 1] += data_points[(i * 3) + 1];
       current_centroid[current_cluster_id[i - start] * 3 + 2] += data_points[(i * 3) + 2];
     }
 
-#pragma omp critical
+	#pragma omp critical
     {
       for (int i = 0; i < K; i++)
       {
@@ -98,17 +112,17 @@ void threadedClustering(int tID, int N, int K, int num_threads, float *data_poin
     }
 
     // Store the largest delta value among all delta values in all the threads
-#pragma omp barrier
+	#pragma omp barrier
     {
       if (current_delta > current_itr_delta_global)
         current_itr_delta_global = current_delta;
     }
 
-#pragma omp barrier
+	#pragma omp barrier
     iteration_count++;
 
     // Set the global delta value and increment the number of iterations
-#pragma omp master
+	#pragma omp master
     {
       delta_global = current_itr_delta_global;
       current_itr_delta_global = 0.0;
