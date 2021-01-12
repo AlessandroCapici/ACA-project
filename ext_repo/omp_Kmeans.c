@@ -143,6 +143,7 @@ void kmeansClusteringOmp(int N, int K, int num_threads, float *data_points, floa
   cluster_points_global = *cluster_points;
 
   // calloc intitalizes the values to zero
+  // (se abbiamo capito bene questo è lo storico dei centroidi)
   centroids_global = (float *)calloc(MAX_ITERATIONS * K * 3, sizeof(float));
 
   // Assigning the first K data points to be the centroids of the K clusters
