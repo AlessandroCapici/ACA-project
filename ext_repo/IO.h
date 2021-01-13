@@ -8,6 +8,7 @@ void readDataset(const char *filename, int *N, float **data_points);
 void writeClusters(const char *filename, int N, float *cluster_points);
 
 // Write the coordinates of the K clusters in a new file (.txt file)
-void writeCentroids(const char *filename, int K, int num_iterations, float *centroids);
+void writeCentroids(const char *filename, int K, int num_iterations,
+		float *centroids);
 
 #endif
