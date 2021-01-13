@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
 	point *centroids;	// array of centroids of clusters
 	int num_iterations = 0;
 	
-	readDataset("../dataset/dataset_5.txt", &N, data_points);
+	readDataset("../datasets/dataset_5.txt", &N, data_points);
 	
 	int i;
 	
@@ -61,18 +61,26 @@ int main(int argc, char **argv) {
 		printf("Point %d: x= %f y=%f z=%f", N, x, y, z);
 	}
 	
+	free(data_points);
 	return 0;
 
 }
 
 // return the number of points in the file
 void readDataset(const char *filename, int *N_points, point *data_points) {
-	FILE *fptr = fopen(filename, "r");
 
+	FILE *fptr;
+	fptr = fopen(filename, "r");
+
+	if(fptr == NULL) {
+		printf("There is a problem with the file read\n");
+		exit(1);
+	}
+
+	int readChars;
 	//remember, the first line is the number of points in the file	
-	//fscanf(fptr, "%d", N_points);
-	//printf("%d", *N_points);
-	*N_points = 5;
+	readChars = fscanf(fptr, "%d \n", &N_points);
+	
 	printf("No. of data points in the dataset: %d \n", *N_points);
 
 	// Each data point is has so many coordinates as DIMENSION
@@ -88,7 +96,6 @@ void readDataset(const char *filename, int *N_points, point *data_points) {
 		int x, y, z;
 		fscanf(fptr, "%d %d %d", &x, &y, &z);
 		printf("%d %d %d", &x, &y, &z);
-	//	*(*data_points + i) = temp;
 		data_points[i].coordinates[0] = x;
 		data_points[i].coordinates[1] = y;
 		data_points[i].coordinates[2] = z;
