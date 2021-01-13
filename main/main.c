@@ -79,9 +79,12 @@ void readDataset(const char *filename, int *N_points, point *data_points) {
 
 	int readChars;
 	//remember, the first line is the number of points in the file	
-	readChars = fscanf(fptr, "%d \n", &N_points);
+	readChars = fscanf(fptr, "%d \n", N_points);
 	
+	
+	printf("The chars read are: %d \n", readChars);	
 	printf("No. of data points in the dataset: %d \n", *N_points);
+	
 
 	// Each data point is has so many coordinates as DIMENSION
 	data_points = malloc((*N_points) * sizeof(point));
