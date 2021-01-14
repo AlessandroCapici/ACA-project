@@ -147,6 +147,7 @@ int processClusterSerial(int N_points, int K, point *data_points, centroid *cent
 				centroids[data_points[i].ID_cluster].sum_coordinates[j] += data_points[i].coordinates[j];
 			}
 			
+			//recenter centroid based on its points
 			for(j = 0; j < K; j++) {
 				replaceCentroid(&centroids[j]);
 			}		
