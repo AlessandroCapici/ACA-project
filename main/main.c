@@ -23,6 +23,7 @@ typedef struct {
 
 point *read_file3D(FILE *f,int *N_points);
 double findEuclideanDistance3D(point point, centroid centroid);
+double findEuclideanDistance(point point, centroid centroid);
 void replaceCentroid(centroid *c);
 
 int main(int argc, char const *argv[]) {
@@ -109,6 +110,18 @@ double findEuclideanDistance3D(point point, centroid centroid) {
 			pow(((double) (point.coordinates[0] - centroid.coordinates[0])), 2)
 			+ pow(((double) (point.coordinates[1] - centroid.coordinates[1])), 2)
 			+ pow(((double) (point.coordinates[2] - centroid.coordinates[2])), 2));
+}
+
+double findEuclideanDistance(point point, centroid centroid) {
+	
+	double sum = 0;
+	int i;
+	
+	for(i = 0; i < DIMENSIONS; i++) {
+		sum += pow((double) (point.coordinates[i] - centroid.coordinates[i]), 2);
+	}
+	
+	return sqrt(sum);
 }
 
 int processClusterSerial(int N_points, int K, point *data_points, centroid *centroids, int *num_iterations) {
