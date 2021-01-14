@@ -1,15 +1,29 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <math.h>
+#include <stdbool.h>
 //#include <omp.h>
 
 #define DIMENSIONS 3
+#define MAX_ITERATIONS 200
+#define THRESHOLD 1e-4
 
-struct point {
+typedef struct {
 	int ID_point;
 	int ID_cluster;
 	float coordinates[DIMENSIONS];
-};
-struct point *read_file(FILE *f,int *N_points);
+}point;
+
+typedef struct {
+	int ID_cluster;
+	int count_points;
+	float coordinates[DIMENSIONS];
+	int sum_coordinates[DIMENSIONS];
+}centroid;
+
+point *read_file3D(FILE *f,int *N_points);
+double findEuclideanDistance3D(point point, centroid centroid);
+void replaceCentroid(centroid *c);
 
 int main(int argc, char const *argv[]) {
 	//	omp_set_num_threads(6);
@@ -23,31 +37,40 @@ int main(int argc, char const *argv[]) {
 	 - filename to write the coordinated of the centroid
 	 */
 
-  FILE *fp;
-	struct point *points;	// array of data points
-	struct point *centroids;	// array of centroids of clusters
+ 	FILE *fp;
+	point *points;	// array of data points
+	centroid *centroids;	// D array of centroids of clusters
+	 
 	int N_points;
 	int num_iterations = 0;
-  int i;
-
-  if (!(fp=fopen("../datasets/dataset_5.txt","r"))) {
-    printf("Error\n");
-    return 1;
-  }
-
-  points=read_file(fp,&N_points);
+	int i;
+	
+	if (!(fp=fopen("../datasets/dataset_5.txt","r"))) {
+		printf("Error\n");
+		return 1;
+	}
+	
+	points = read_file3D(fp,&N_points);
 	printf("%d\n",N_points);
-  for ( i = 0; i < 5; i++) {
-    printf("%f %f %f\n",points[i].coordinates[0],points[i].coordinates[1],points[i].coordinates[2] );
-  }
+	  
+	/*
+	for ( i = 0; i < N_points - 1; i++) {
+		//printf("%f %f %f\n",points[i].coordinates[0],points[i].coordinates[1],points[i].coordinates[2] );
+		double d = findEuclideanDistance3D(points[i], points[i+1]);
+		printf("%f\n", d);
+		
+	}*/
+	
+	
+	
 	free(points);
-  return 0;
+	 return 0;
 }
 
-struct point *read_file(FILE *f,int *N_points)
+point *read_file3D(FILE *f,int *N_points)
 {
-    struct point *p;
-    int conv,i=0;
+    point *p;
+    int conv, i=0;
     char buf[1000];
 		//remember, the first line is the number of points in the file
     fgets(buf, sizeof(buf), f);
@@ -59,9 +82,95 @@ struct point *read_file(FILE *f,int *N_points)
     }
 
     while (fgets(buf, sizeof(buf), f)) {
-        conv = sscanf(buf,"%f %f %f", &p[i].coordinates[0],
-                &p[i].coordinates[1],&p[i].coordinates[2]);
+        conv = sscanf(buf,"%f %f %f", 
+				&p[i].coordinates[0],
+                &p[i].coordinates[1],
+				&p[i].coordinates[2]);
+		p[i].ID_point = i;
         i++;
     }
     return p;
 }
+
+void replaceCentroid(centroid *c) {
+	
+	int i;
+	for(i = 0; i < DIMENSIONS; i++){
+		(*c).coordinates[i] = (*c).sum_coordinates[i] / (float) (*c).sum_coordinates[i];		
+		
+	}
+	
+}
+
+double findEuclideanDistance3D(point point, centroid centroid) {
+	// Function to find the Euclidean distance between two points in 3 dimensional space
+	
+	return sqrt(
+			pow(((double) (point.coordinates[0] - centroid.coordinates[0])), 2)
+			+ pow(((double) (point.coordinates[1] - centroid.coordinates[1])), 2)
+			+ pow(((double) (point.coordinates[2] - centroid.coordinates[2])), 2));
+}
+
+int processClusterSerial(int N_points, int K, point *data_points, centroid *centroids, int *num_iterations) {
+	
+	//i centroidi sono gia inizializzati altrove
+
+	int iteration_count = 0;
+	bool isChanged = false;
+	
+	while(iteration_count < MAX_ITERATIONS && isChanged) {
+			
+		double min_distance, current_distance;
+		isChanged = false;
+	
+		int i;
+		for(i = 0; i < N_points; i++) {
+			min_distance = __DBL_MAX__; // min_distance is assigned the largest possible double value
+			
+			int j;
+			//here we tie the point with the centroid
+			for(j = 0; j < K; j++) {
+				current_distance = findEuclideanDistance3D(data_points[i], centroids[j]);
+				
+				if(current_distance < min_distance) {
+					min_distance = current_distance;
+					//assign the ID of the cluster as the number of the centroid 
+					data_points[i].ID_cluster = j;			
+					isChanged = true;
+				}
+			}
+			//we update the number of point for the centroid
+			centroids[data_points[i].ID_cluster].count_points++;
+			
+			//here we start sum 		
+			for(j = 0; j < DIMENSIONS; j++){
+				centroids[data_points[i].ID_cluster].sum_coordinates[j] += data_points[i].coordinates[j];
+			}
+			
+			for(j = 0; j < K; j++) {
+				replaceCentroid(&centroids[j]);
+			}		
+	
+		}
+		
+		iteration_count++;
+	
+	}
+
+	return iteration_count;
+			
+}
+/*
+void kMeanSerial() {
+	//inizializzazione centroidi (ricordarsi di usare la c alloc)
+
+	// Assigning the first K data points to be the centroids of the K clusters
+	for (int i = 0; i < K; i++) {
+		centroids[(i * 3)] = data_points[(i * 3)];
+		centroids[(i * 3) + 1] = data_points[(i * 3) + 1];
+		centroids(i * 3) + 2] = data_points[(i * 3) + 2];
+	}
+	
+}*/
+
+

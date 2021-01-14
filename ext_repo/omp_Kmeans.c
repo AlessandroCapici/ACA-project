@@ -90,27 +90,27 @@ void threadedClustering(int tID, int N, int K, int num_threads,
 					data_points[(i * 3) + 1];
 			current_centroid[current_cluster_id[i - start] * 3 + 2] +=
 					data_points[(i * 3) + 2];
-		}
-
-#pragma omp critical
-		{
-			for (int i = 0; i < K; i++) {
-				if (cluster_count[i] == 0) {
-					// printf("Cluster %d has no data points in it\n", i);
-					continue;
-				}
-
-				// Update the centroids
-				centroids_global[((iteration_count + 1) * K + i) * 3] =
-						current_centroid[(i * 3)] / (float) cluster_count[i];
-				centroids_global[((iteration_count + 1) * K + i) * 3 + 1] =
-						current_centroid[(i * 3) + 1]
-								/ (float) cluster_count[i];
-				centroids_global[((iteration_count + 1) * K + i) * 3 + 2] =
-						current_centroid[(i * 3) + 2]
-								/ (float) cluster_count[i];
 			}
-		}
+
+		#pragma omp critical
+			{
+				for (int i = 0; i < K; i++) {
+					if (cluster_count[i] == 0) {
+						// printf("Cluster %d has no data points in it\n", i);
+						continue;
+					}
+	
+					// Update the centroids
+					centroids_global[((iteration_count + 1) * K + i) * 3] =
+							current_centroid[(i * 3)] / (float) cluster_count[i];
+					centroids_global[((iteration_count + 1) * K + i) * 3 + 1] =
+							current_centroid[(i * 3) + 1]
+									/ (float) cluster_count[i];
+					centroids_global[((iteration_count + 1) * K + i) * 3 + 2] =
+							current_centroid[(i * 3) + 2]
+									/ (float) cluster_count[i];
+		 		}
+			}
 
 		// Find delta value after each iteration in all the threads
 		double current_delta = 0.0;
