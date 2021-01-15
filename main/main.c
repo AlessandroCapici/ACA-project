@@ -9,7 +9,7 @@
 #define THRESHOLD 1e-4
 #define N_CENTROIDS 3
 
-
+//structure definitions
 typedef struct {
 	int ID_point;
 	int ID_cluster;
@@ -23,13 +23,17 @@ typedef struct {
 	int sum_coordinates[DIMENSIONS];
 }centroid;
 
+//prototip defininitions:
+//IO functions
 point *read_file3D(FILE *f,int *N_points);
+void writeCentroids3D(int K,centroid *c);
+//distance functions
 double findEuclideanDistance3D(point point, centroid centroid);
 double findEuclideanDistance(point point, centroid centroid);
+//k-mean algorithm functions
 int processClusterSerial(int N_points, int K, point *data_points, centroid *centroids, int *num_iterations);
 void replaceCentroid(centroid *c);
 centroid *kMeanSerial3D(int N_k,point *p);
-void writeCentroids3D(int K,centroid *c);
 
 int main(int argc, char const *argv[]) {
 	//	omp_set_num_threads(6);
@@ -49,20 +53,22 @@ int main(int argc, char const *argv[]) {
 
 	int N_points;
 	int num_iterations = 0;
-	int i;
 
 	if (!(fp=fopen("../datasets/dataset_10000_4.txt","r"))) {
 		printf("Error open points file\n");
 		return 1;
 	}
-
+	//read point from dataset
 	points = read_file3D(fp,&N_points);
+	//initialize cendroids
 	centroids=kMeanSerial3D(N_CENTROIDS,points);
+	//k-mean
 	num_iterations=processClusterSerial(N_points,N_CENTROIDS,points,centroids,&num_iterations);
+	//write result
 	writeCentroids3D(N_CENTROIDS,centroids);
 	printf("%d\n",num_iterations);
 
-	/*for ( i = 0; i < 3; i++) {
+	/*for (int i = 0; i < 3; i++) {
 		printf("%f %f %f %d\n", centroids[i].coordinates[0],centroids[i].coordinates[1],centroids[i].coordinates[2],centroids[i].ID_cluster);
 
 	}*/
@@ -104,9 +110,7 @@ void replaceCentroid(centroid *c) {
 	int i;
 	for(i = 0; i < DIMENSIONS; i++){
 		(*c).coordinates[i] = (*c).sum_coordinates[i] / (float) (*c).count_points;
-
 	}
-
 }
 
 double findEuclideanDistance3D(point point, centroid centroid) {
@@ -180,11 +184,10 @@ int processClusterSerial(int N_points, int K, point *data_points, centroid *cent
 }
 
 centroid *kMeanSerial3D(int N_k,point *p) {
-	//inizializzazione centroidi (ricordarsi di usare la c alloc)
 	centroid *c;
 	int i;
-	// Each data point is has so many coordinates as DIMENSION
 	if (!(c = calloc(N_k,sizeof(*c)))) {
+			printf("Error calloc\n", );
 			return NULL;
 	}
 	for (i = 0; i < N_k ; i++) {
@@ -203,7 +206,5 @@ void writeCentroids3D(int K,centroid *c) {
 			fprintf(fptr, "%f %f %f", c[i].coordinates[0],c[i].coordinates[1],c[i].coordinates[2]);
 			fprintf(fptr, "\n");
 		}
-
-
 	fclose(fptr);
 }
