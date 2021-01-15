@@ -5,7 +5,7 @@
 //#include <omp.h>
 
 #define DIMENSIONS 3
-#define MAX_ITERATIONS 200
+#define MAX_ITERATIONS 800
 #define THRESHOLD 1e-4
 #define N_CENTROIDS 3
 
@@ -135,9 +135,9 @@ int processClusterSerial(int N_points, int K, point *data_points, centroid *cent
 	//i centroidi sono gia inizializzati altrove
 
 	int iteration_count = 0;
-	bool isChanged = false;
-	while(iteration_count < MAX_ITERATIONS && true) {
-
+	bool isChanged=true;
+	while(iteration_count < MAX_ITERATIONS && isChanged) {
+		isChanged = false;
 		double min_distance, current_distance;
 		isChanged = false;
 		int j;
