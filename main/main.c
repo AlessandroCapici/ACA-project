@@ -7,6 +7,8 @@
 #define DIMENSIONS 3
 #define MAX_ITERATIONS 200
 #define THRESHOLD 1e-4
+#define N_CENTROIDS 5
+
 
 typedef struct {
 	int ID_point;
@@ -24,8 +26,10 @@ typedef struct {
 point *read_file3D(FILE *f,int *N_points);
 double findEuclideanDistance3D(point point, centroid centroid);
 double findEuclideanDistance(point point, centroid centroid);
+int processClusterSerial(int N_points, int K, point *data_points, centroid *centroids, int *num_iterations);
 void replaceCentroid(centroid *c);
 centroid *kMeanSerial3D(int N_k,point *p);
+void writeCentroids3D(int K,centroid *c);
 
 int main(int argc, char const *argv[]) {
 	//	omp_set_num_threads(6);
@@ -47,25 +51,27 @@ int main(int argc, char const *argv[]) {
 	int num_iterations = 0;
 	int i;
 
-	if (!(fp=fopen("../datasets/dataset_5.txt","r"))) {
-		printf("Error\n");
+	if (!(fp=fopen("../datasets/dataset_10000_4.txt","r"))) {
+		printf("Error open points file\n");
 		return 1;
 	}
 
 	points = read_file3D(fp,&N_points);
-	centroids=kMeanSerial3D(4,points);
-	printf("%d\n",N_points);
+	centroids=kMeanSerial3D(N_CENTROIDS,points);
+	num_iterations=processClusterSerial(N_points,N_CENTROIDS,points,centroids,&num_iterations);
+	writeCentroids3D(N_CENTROIDS,centroids);
+	printf("%d\n",num_iterations);
 
-
-	for ( i = 0; i < 3; i++) {
+	/*for ( i = 0; i < 3; i++) {
 		printf("%f %f %f %d\n", centroids[i].coordinates[0],centroids[i].coordinates[1],centroids[i].coordinates[2],centroids[i].ID_cluster);
 
-	}
+	}*/
 
 
 
 	free(points);
-	 return 0;
+	free(centroids);
+	return 0;
 }
 
 point *read_file3D(FILE *f,int *N_points)
@@ -130,8 +136,7 @@ int processClusterSerial(int N_points, int K, point *data_points, centroid *cent
 
 	int iteration_count = 0;
 	bool isChanged = false;
-
-	while(iteration_count < MAX_ITERATIONS && isChanged) {
+	while(iteration_count < MAX_ITERATIONS && true) {
 
 		double min_distance, current_distance;
 		isChanged = false;
@@ -190,4 +195,16 @@ centroid *kMeanSerial3D(int N_k,point *p) {
 	}
 	return c;
 
+}
+
+void writeCentroids3D(int K,centroid *c) {
+	FILE *fptr = fopen("../result/centroid.txt", "w");
+	fprintf(fptr, "X Y Z\n");
+	for (int i = 0; i < K; i++) {
+			fprintf(fptr, "%f %f %f", c[i].coordinates[0],c[i].coordinates[1],c[i].coordinates[2]);
+			fprintf(fptr, "\n");
+		}
+
+
+	fclose(fptr);
 }
