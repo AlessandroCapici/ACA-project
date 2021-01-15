@@ -68,8 +68,13 @@ int main(int argc, char const *argv[]) {
 	num_iterations = processClusterSerial(N_points,N_CENTROIDS,points,centroids,&num_iterations);
 	//write result
 	writeCentroids3D(N_CENTROIDS,centroids);
-	printf("Number of iterations: %d\n",num_iterations);
-
+	if(num_iterations == MAX_ITERATIONS) {
+		printf("It has been reached the max number of iterations possible: %d\n",num_iterations);
+		
+	} else {
+		printf("Number of iterations: %d\n",num_iterations);
+		
+	}
 	/*for (int i = 0; i < 3; i++) {
 		printf("%f %f %f %d\n", centroids[i].coordinates[0],centroids[i].coordinates[1],centroids[i].coordinates[2],centroids[i].ID_cluster);
 
