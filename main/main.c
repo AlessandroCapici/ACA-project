@@ -7,7 +7,7 @@
 #define DIMENSIONS 3
 #define MAX_ITERATIONS 200
 #define THRESHOLD 1e-4
-#define N_CENTROIDS 5
+#define N_CENTROIDS 3
 
 
 typedef struct {
@@ -103,7 +103,7 @@ void replaceCentroid(centroid *c) {
 
 	int i;
 	for(i = 0; i < DIMENSIONS; i++){
-		(*c).coordinates[i] = (*c).sum_coordinates[i] / (float) (*c).sum_coordinates[i];
+		(*c).coordinates[i] = (*c).sum_coordinates[i] / (float) (*c).count_points;
 
 	}
 
@@ -140,12 +140,11 @@ int processClusterSerial(int N_points, int K, point *data_points, centroid *cent
 
 		double min_distance, current_distance;
 		isChanged = false;
-
+		int j;
 		int i;
 		for(i = 0; i < N_points; i++) {
 			min_distance = __DBL_MAX__; // min_distance is assigned the largest possible double value
 
-			int j;
 			//here we tie the point with the centroid
 			for(j = 0; j < K; j++) {
 				current_distance = findEuclideanDistance3D(data_points[i], centroids[j]);
@@ -166,12 +165,12 @@ int processClusterSerial(int N_points, int K, point *data_points, centroid *cent
 			}
 
 			//recenter centroid based on its points
-			for(j = 0; j < K; j++) {
-				replaceCentroid(&centroids[j]);
-			}
+
 
 		}
-
+		for(j = 0; j < K; j++) {
+			replaceCentroid(&centroids[j]);
+		}
 		iteration_count++;
 
 	}
