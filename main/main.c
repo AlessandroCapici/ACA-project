@@ -39,6 +39,7 @@ double findEuclideanDistance(point point, centroid centroid);
 int processClusterSerial(int N_points, int K, point *data_points, centroid *centroids, int *num_iterations);
 void replaceCentroid(centroid *c);
 centroid *kMeanSerial(int k, centroid *centroids, int N_points, point *points, int *num_iterations);
+centroid *initializeCentroids(int k, centroid *centroids, int N_points, point *points);
 
 int main(int argc, char const *argv[]) {
 
@@ -224,12 +225,26 @@ int processClusterSerial(int N_points, int K, point *data_points, centroid *cent
 
 centroid *kMeanSerial(int k, centroid *centroids, int N_points, point *points, int *num_iterations) {
 	
+	centroids = initializeCentroids(k, centroids, N_points, points);
+	
+	//starting the process of clustering
+	processClusterSerial(N_points, k, points, centroids, num_iterations);
+
+	return centroids;
+}
+
+centroid *initializeCentroids(int k, centroid *centroids, int N_points, point *points) {
+	
 	int i, j;
 	centroids = calloc(k, sizeof(*centroids));
 	if (centroids == NULL) {
 			printf("Error calloc\n");
 			exit(1);
 	} 
+	
+	if(N_points < k) {
+		exit(1);
+	}
 	
 	//initialize centroids. First k points will be the first k centroids
 	for (i = 0; i < k; i++) {
@@ -244,11 +259,10 @@ centroid *kMeanSerial(int k, centroid *centroids, int N_points, point *points, i
 		
 	}
 	
-	//starting the process of clustering
-	processClusterSerial(N_points, k, points, centroids, num_iterations);
-
 	return centroids;
 }
+
+
 
 void writeCentroids3D(int K,centroid *c) {
 	FILE *fptr = fopen(OUTPUT_FILE, "w");
