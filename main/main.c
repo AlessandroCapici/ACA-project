@@ -8,7 +8,7 @@
 #define MAX_ITERATIONS 800
 #define THRESHOLD 1e-4
 #define N_CENTROIDS 3
-#define DATASET_FILE "../datasets/dataset_10000_4.txt"
+#define DATASET_FILE "../datasets/dataset_50000_4.txt"
 #define OUTPUT_FILE "../result/centroid.txt"
 
 //structure definitions
@@ -66,26 +66,11 @@ int main(int argc, char const *argv[]) {
 	double start_time = omp_get_wtime();
 	centroids = kMeanSerial(N_CENTROIDS, centroids, N_points, points, &num_iterations);
 	double end = omp_get_wtime();
+	
 	printf("Done algo. Num of iterations: %d\n", num_iterations);
+	printf("Time needed for serial algorithm: %f\n\n", end - start_time);
 	
 	//write result
-
-	if(centroids != NULL) {
-		printf("Centroids not null \n\n");
-		
-	} else {
-		printf("Centroids is null");
-		return 1;
-	}
-
-	int i;
-	for(i = 0; i < N_CENTROIDS; i++) {
-		printf("%f %f %f\n",
-			centroids[i].coordinates[0],
-			centroids[i].coordinates[1],
-			centroids[i].coordinates[2]);
-	
-	}
 	writeCentroids3D(N_CENTROIDS, centroids);
 		
 	if(num_iterations == MAX_ITERATIONS) {
@@ -244,9 +229,7 @@ centroid *kMeanSerial(int k, centroid *centroids, int N_points, point *points, i
 	if (centroids == NULL) {
 			printf("Error calloc\n");
 			exit(1);
-	} else {
-		printf("%u\n", centroids);
-	}
+	} 
 	
 	//initialize centroids. First k points will be the first k centroids
 	for (i = 0; i < k; i++) {
