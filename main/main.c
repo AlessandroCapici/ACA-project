@@ -8,6 +8,9 @@
 #define MAX_ITERATIONS 800
 #define THRESHOLD 1e-4
 #define N_CENTROIDS 3
+
+#define N_THR 4
+
 #define DATASET_FILE "../datasets/dataset_50000_4.txt"
 #define OUTPUT_FILE "../result/centroid.txt"
 
@@ -223,6 +226,10 @@ int processClusterSerial(int N_points, int K, point *data_points, centroid *cent
 
 }
 
+int processClusterParallel(int N_points, int K, point *data_points, centroid *centroids, int *num_iterations) {
+	
+}
+
 centroid *kMeanSerial(int k, centroid *centroids, int N_points, point *points, int *num_iterations) {
 	
 	centroids = initializeCentroids(k, centroids, N_points, points);
@@ -262,6 +269,15 @@ centroid *initializeCentroids(int k, centroid *centroids, int N_points, point *p
 	return centroids;
 }
 
+centroid *kMeansParallel(int k, centroid *centroids, int N_points, point *points) {
+	
+	//initialize centroids
+	centroids = initializeCentroids(k, centroids, N_points, points);	
+	
+	omp_set_num_threads(N_THR);
+	
+
+}
 
 
 void writeCentroids3D(int K,centroid *c) {
