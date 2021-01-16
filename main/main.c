@@ -187,7 +187,7 @@ centroid *kMeanSerial3D(int N_k,point *p) {
 	centroid *c;
 	int i;
 	if (!(c = calloc(N_k,sizeof(*c)))) {
-			printf("Error calloc\n", );
+			printf("Error calloc\n");
 			return NULL;
 	}
 	for (i = 0; i < N_k ; i++) {
@@ -202,7 +202,9 @@ centroid *kMeanSerial3D(int N_k,point *p) {
 void writeCentroids3D(int K,centroid *c) {
 	FILE *fptr = fopen("../result/centroid.txt", "w");
 	fprintf(fptr, "X Y Z\n");
-	for (int i = 0; i < K; i++) {
+	
+	int i;
+	for (i = 0; i < K; i++) {
 			fprintf(fptr, "%f %f %f", c[i].coordinates[0],c[i].coordinates[1],c[i].coordinates[2]);
 			fprintf(fptr, "\n");
 		}
