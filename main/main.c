@@ -111,7 +111,10 @@ point *read_file3D(int *N_points) {
         printf(buf);
         printf("\n");
         
-		conv = sscanf(buf,"%d %d %d", &p[i].coordinates[0], &p[i].coordinates[1], &p[i].coordinates[2]);
+		conv = sscanf(buf,"%f %f %f", 
+				&p[i].coordinates[0], 
+				&p[i].coordinates[1], 
+				&p[i].coordinates[2]);
 		
 		p[i].ID_point = i;
         
@@ -178,11 +181,11 @@ int processClusterSerial(int N_points, int K, point *data_points, centroid *cent
 	int iteration_count = 0;
 	bool isChanged=true;
 	while(iteration_count < MAX_ITERATIONS && isChanged) {
-		isChanged = false;
+		
 		double min_distance, current_distance;
 		isChanged = false;
-		int j;
-		int i;
+		int i, j;
+		
 		for(i = 0; i < N_points; i++) {
 			min_distance = __DBL_MAX__; // min_distance is assigned the largest possible double value
 
@@ -200,18 +203,18 @@ int processClusterSerial(int N_points, int K, point *data_points, centroid *cent
 			//we update the number of point for the centroid
 			centroids[data_points[i].ID_cluster].count_points++;
 
-			//here we start sum
+			//here we start the sum
 			for(j = 0; j < DIMENSIONS; j++){
 				centroids[data_points[i].ID_cluster].sum_coordinates[j] += data_points[i].coordinates[j];
 			}
 
-			//recenter centroid based on its points
-
-
 		}
+
+		//recenter centroid based on its points
 		for(j = 0; j < K; j++) {
 			replaceCentroid(&centroids[j]);
 		}
+
 		iteration_count++;
 
 	}
