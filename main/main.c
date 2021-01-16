@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include <stdbool.h>
-//#include <omp.h>
+#include <omp.h>
 
 #define DIMENSIONS 3
 #define MAX_ITERATIONS 800
@@ -63,7 +63,11 @@ int main(int argc, char const *argv[]) {
 	
 	/*
 	//k-mean algo
+	
+	double start_time = omp_get_wtime();
 	kMeanSerial(N_CENTROIDS, centroids, N_points, points, &num_iterations);
+	double end = omp_get_wtime();
+	
 	printf("Done algo. Num of iterations: %d\n", num_iterations);
 	
 	//write result
@@ -111,7 +115,7 @@ point *read_file3D(int *N_points) {
         printf(buf);
         printf("\n");
         
-		conv = sscanf(buf,"%f %f %f", 
+		conv = sscanf(buf, "%f %f %f", 
 				&p[i].coordinates[0], 
 				&p[i].coordinates[1], 
 				&p[i].coordinates[2]);
@@ -119,7 +123,7 @@ point *read_file3D(int *N_points) {
 		p[i].ID_point = i;
         
         printf("Printed charaters: %d\n", conv);
-        printf("ID= %d x= %d y= %d z= %d\n\n",
+        printf("ID= %d x= %f y= %f z= %f\n\n",
 			p[i].ID_point,
 			p[i].coordinates[0],
 			p[i].coordinates[1],
