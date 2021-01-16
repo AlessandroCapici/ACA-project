@@ -8,6 +8,8 @@
 #define MAX_ITERATIONS 800
 #define THRESHOLD 1e-4
 #define N_CENTROIDS 10
+#define DATASET_FILE "../datasets/dataset_5.txt"
+#define OUTPUT_FILE "../result/centroid.txt"
 
 //structure definitions
 typedef struct {
@@ -25,8 +27,9 @@ typedef struct {
 
 //prototip defininitions:
 //IO functions
-point *read_file3D(FILE *f,int *N_points);
+point *read_file3D(int *N_points);
 void writeCentroids3D(int K,centroid *c);
+void printPoints3D(point* p, int N);
 
 //distance functions
 double findEuclideanDistance3D(point point, centroid centroid);
@@ -35,37 +38,34 @@ double findEuclideanDistance(point point, centroid centroid);
 //k-mean algorithm functions
 int processClusterSerial(int N_points, int K, point *data_points, centroid *centroids, int *num_iterations);
 void replaceCentroid(centroid *c);
-centroid *kMeanSerial(int k,point *p);
+void kMeanSerial(int k, centroid *centroids, int N_points, point *points, int *num_iterations);
 
 int main(int argc, char const *argv[]) {
-	//	omp_set_num_threads(6);
 
-	/* Correct structure of command line arguments
-	 - ./a.out
-	 - dataset filename,
-	 - number of clusters,
-	 - number of threads,
-	 - filename to write the clustered data points,
-	 - filename to write the coordinated of the centroid
-	 */
-
- 	FILE *fp;
 	point *points;	// array of data points
 	centroid *centroids;	// D array of centroids of clusters
 
-	int N_points;
-	int num_iterations = 0;
+	int N_points; // number of points from dataset file
+	int num_iterations = 0; // number of iterations needed to end the kmeans algo
 
-	if (!(fp=fopen("../datasets/dataset_10000_4.txt","r"))) {
-		printf("Error open points file\n");
+	//read point from dataset
+	points = read_file3D(&N_points);
+	
+	if(points != NULL) {
+		printf("File read\nThere are %d points\n\n", N_points);
+		
+	} else {
+		printf("Error while reading file\n");
 		return 1;
 	}
-	//read point from dataset
-	points = read_file3D(fp,&N_points);
-	//initialize cendroids
-	centroids=kMeanSerial(N_CENTROIDS,points);
-	//k-mean
-	num_iterations = processClusterSerial(N_points,N_CENTROIDS,points,centroids,&num_iterations);
+	
+	//printPoints3D(points, 5);
+	
+	/*
+	//k-mean algo
+	kMeanSerial(N_CENTROIDS, centroids, N_points, points, &num_iterations);
+	printf("Done algo. Num of iterations: %d\n", num_iterations);
+	
 	//write result
 	writeCentroids3D(N_CENTROIDS,centroids);
 	if(num_iterations == MAX_ITERATIONS) {
@@ -75,20 +75,26 @@ int main(int argc, char const *argv[]) {
 		printf("Number of iterations: %d\n",num_iterations);
 		
 	}
-	/*for (int i = 0; i < 3; i++) {
-		printf("%f %f %f %d\n", centroids[i].coordinates[0],centroids[i].coordinates[1],centroids[i].coordinates[2],centroids[i].ID_cluster);
-
-	}*/
-
-
-
+	*/
 	free(points);
 	free(centroids);
+	
 	return 0;
 }
 
-point *read_file3D(FILE *f,int *N_points)
-{
+point *read_file3D(int *N_points) {
+	
+	FILE *f;
+	
+	printf("Trying to open ");
+	printf(DATASET_FILE);
+	printf("\n");
+	
+	if (!(f=fopen(DATASET_FILE,"r"))) {
+		printf("Error open points file\n");
+		return NULL;
+	}
+
     point *p;
     int conv, i=0;
     char buf[1000];
@@ -102,14 +108,37 @@ point *read_file3D(FILE *f,int *N_points)
     }
 
     while (fgets(buf, sizeof(buf), f)) {
-        conv = sscanf(buf,"%f %f %f",
+        printf(buf);
+        printf("\n");
+        
+		conv = sscanf(buf,"%f %f %f",
 				&p[i].coordinates[0],
                 &p[i].coordinates[1],
 				&p[i].coordinates[2]);
 		p[i].ID_point = i;
-        i++;
+        
+        printf("Printed charaters: %d\n", conv);
+        printf("ID= %d x= %d y= %d z= %d\n\n",
+			p[i].ID_point,
+			p[i].coordinates[0],
+			p[i].coordinates[1],
+			p[i].coordinates[2]);
+        
+		i++;
     }
+    
     return p;
+}
+
+void printPoints3D(point* p, int N) { 
+	
+	int i;
+	for(i = 0; i < N; i++) {
+		printf("x= %d y= %d z= %d\n",
+			p[i].coordinates[0],
+			p[i].coordinates[1],
+			p[i].coordinates[2]);
+	}
 }
 
 void replaceCentroid(centroid *c) {
@@ -118,6 +147,7 @@ void replaceCentroid(centroid *c) {
 	for(i = 0; i < DIMENSIONS; i++){
 		(*c).coordinates[i] = (*c).sum_coordinates[i] / (float) (*c).count_points;
 	}
+
 }
 
 double findEuclideanDistance3D(point point, centroid centroid) {
@@ -190,29 +220,34 @@ int processClusterSerial(int N_points, int K, point *data_points, centroid *cent
 
 }
 
-centroid *kMeanSerial(int k,point *p) {
-	centroid *c;
+void kMeanSerial(int k, centroid *centroids, int N_points, point *points, int *num_iterations) {
+	
 	int i, j;
 	
-	if (!(c = calloc(k,sizeof(*c)))) {
+	if (!(centroids = calloc(k,sizeof(*centroids)))) {
 			printf("Error calloc\n");
-			return NULL;
+			exit(1);
 	}
 	
+	//initialize centroids. First k points will be the first k centroids
 	for (i = 0; i < k; i++) {
+		//for each centroid
 		
 		for(j = 0; j < DIMENSIONS; j++) {
-			c[i].coordinates[j] = p[i].coordinates[j];
+			//set coordinates
+			centroids[i].coordinates[j] = points[i].coordinates[j];
 		}
 		
 	}
 	
-	return c;
+	//starting the process of clustering
+	processClusterSerial(N_points, k, points, centroids, num_iterations);
+
 
 }
 
 void writeCentroids3D(int K,centroid *c) {
-	FILE *fptr = fopen("../result/centroid.txt", "w");
+	FILE *fptr = fopen(OUTPUT_FILE, "w");
 	fprintf(fptr, "X Y Z\n");
 	int i = 0;
 	
