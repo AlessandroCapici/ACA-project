@@ -7,7 +7,7 @@
 #define DIMENSIONS 3
 #define MAX_ITERATIONS 800
 #define THRESHOLD 1e-4
-#define N_CENTROIDS 10
+#define N_CENTROIDS 3
 #define DATASET_FILE "../datasets/dataset_5.txt"
 #define OUTPUT_FILE "../result/centroid.txt"
 
@@ -106,15 +106,13 @@ point *read_file3D(int *N_points) {
     if (!(p = malloc((*N_points) * sizeof(*p)))) {
         return NULL;
     }
-
+	
     while (fgets(buf, sizeof(buf), f)) {
         printf(buf);
         printf("\n");
         
-		conv = sscanf(buf,"%f %f %f",
-				&p[i].coordinates[0],
-                &p[i].coordinates[1],
-				&p[i].coordinates[2]);
+		conv = sscanf(buf,"%d %d %d", &p[i].coordinates[0], &p[i].coordinates[1], &p[i].coordinates[2]);
+		
 		p[i].ID_point = i;
         
         printf("Printed charaters: %d\n", conv);
@@ -126,6 +124,8 @@ point *read_file3D(int *N_points) {
         
 		i++;
     }
+    
+    //printPoints3D(p, *N_points);
     
     return p;
 }
