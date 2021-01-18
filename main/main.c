@@ -254,7 +254,7 @@ int processClusterParallel(int N_points, int K, point *data_points, centroid *ce
 			double min_distance, current_distance;
 			int i, j;
 		
-			#pragma omp for reduction(+: sum_of_points) 
+			#pragma omp for reduction(+: sum_of_points, sum_of_coordinates_matrix) 
 			
 			for(i = 0; i < N_points; i++) {
 				min_distance = __DBL_MAX__; // min_distance is assigned the largest possible double value
