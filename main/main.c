@@ -39,9 +39,7 @@ double findEuclideanDistance3D(point point, centroid centroid);
 double findEuclideanDistance(point point, centroid centroid);
 
 //k-mean algorithm functions
-int processClusterSerial(int N_points, int K, point *data_points, centroid *centroids, int *num_iterations);
 void replaceCentroid(centroid *c);
-centroid *kMeanSerial(int k, centroid *centroids, int N_points, point *points, int *num_iterations);
 centroid *initializeCentroids(int k, centroid *centroids, int N_points, point *points);
 centroid *kMeansParallel(int k, centroid *centroids, int N_points, point *points,int *num_iterations);
 int processClusterParallel(int N_points, int K, point *data_points, centroid *centroids, int *num_iterations);
