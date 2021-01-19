@@ -43,6 +43,8 @@ int processClusterSerial(int N_points, int K, point *data_points, centroid *cent
 void replaceCentroid(centroid *c);
 centroid *kMeanSerial(int k, centroid *centroids, int N_points, point *points, int *num_iterations);
 centroid *initializeCentroids(int k, centroid *centroids, int N_points, point *points);
+centroid *kMeansParallel(int k, centroid *centroids, int N_points, point *points,int *num_iterations);
+int processClusterParallel(int N_points, int K, point *data_points, centroid *centroids, int *num_iterations);
 
 int main(int argc, char const *argv[]) {
 
@@ -54,51 +56,51 @@ int main(int argc, char const *argv[]) {
 
 	//read point from dataset
 	points = read_file3D(&N_points);
-	
+
 	if(points != NULL) {
 		printf("File read\nThere are %d points\n\n", N_points);
-		
+
 	} else {
 		printf("Error while reading file\n");
 		return 1;
 	}
-	
+
 	//printPoints3D(points, 5);
-	
+
 	//k-mean algo
-	
+
 	double start_time = omp_get_wtime();
-	centroids = kMeanSerial(N_CENTROIDS, centroids, N_points, points, &num_iterations);
+	centroids = kMeansParallel(N_CENTROIDS, centroids, N_points, points,&num_iterations);
 	double end = omp_get_wtime();
-	
+
 	printf("Done algo. Num of iterations: %d\n", num_iterations);
 	printf("Time needed for serial algorithm: %f\n\n", end - start_time);
-	
+
 	//write result
 	writeCentroids3D(N_CENTROIDS, centroids);
-		
+
 	if(num_iterations == MAX_ITERATIONS) {
 		printf("It has been reached the max number of iterations possible: %d\n",num_iterations);
-		
+
 	} else {
 		printf("Number of iterations: %d\n",num_iterations);
-		
+
 	}
-	
+
 	free(points);
 	free(centroids);
-	
+
 	return 0;
 }
 
 point *read_file3D(int *N_points) {
-	
+
 	FILE *f;
-	
+
 	printf("Trying to open ");
 	printf(DATASET_FILE);
 	printf("\n");
-	
+
 	if (!(f=fopen(DATASET_FILE,"r"))) {
 		printf("Error open points file\n");
 		return NULL;
@@ -115,24 +117,24 @@ point *read_file3D(int *N_points) {
     if (!(p = malloc((*N_points) * sizeof(*p)))) {
         return NULL;
     }
-	
+
     while (fgets(buf, sizeof(buf), f)) {
-       
-		conv = sscanf(buf, "%f %f %f", 
-				&p[i].coordinates[0], 
-				&p[i].coordinates[1], 
+
+		conv = sscanf(buf, "%f %f %f",
+				&p[i].coordinates[0],
+				&p[i].coordinates[1],
 				&p[i].coordinates[2]);
-		
+
 		p[i].ID_point = i;
-        
+
   		i++;
     }
-        
+
     return p;
 }
 
-void printPoints3D(point* p, int N) { 
-	
+void printPoints3D(point* p, int N) {
+
 	int i;
 	for(i = 0; i < N; i++) {
 		printf("ID= %d x= %f y= %f z= %f\n",
@@ -148,20 +150,11 @@ void replaceCentroid(centroid *c) {
 	int i;
 	for(i = 0; i < DIMENSIONS; i++){
 		(*c).coordinates[i] = (*c).sum_coordinates[i] / (float) (*c).count_points;
-	//	printf("%f ", (*c).coordinates[i]);		
+	//	printf("%f ", (*c).coordinates[i]);
 	}
-	
+
 	//printf("\n\n");
 
-}
-
-double findEuclideanDistance3D(point point, centroid centroid) {
-	// Function to find the Euclidean distance between two points in 3 dimensional space
-
-	return sqrt(
-			pow(((double) (point.coordinates[0] - centroid.coordinates[0])), 2)
-			+ pow(((double) (point.coordinates[1] - centroid.coordinates[1])), 2)
-			+ pow(((double) (point.coordinates[2] - centroid.coordinates[2])), 2));
 }
 
 double findEuclideanDistance(point point, centroid centroid) {
@@ -176,93 +169,47 @@ double findEuclideanDistance(point point, centroid centroid) {
 	return sqrt(sum);
 }
 
-int processClusterSerial(int N_points, int K, point *data_points, centroid *centroids, int *num_iterations) {
-
-	//i centroidi sono gia inizializzati altrove
-
-	*num_iterations = 0;
-	bool isChanged=true;
-	
-	while(*num_iterations < MAX_ITERATIONS && isChanged) {
-		
-		double min_distance, current_distance;
-		isChanged = false;
-		int i, j;
-		
-		for(i = 0; i < N_points; i++) {
-			min_distance = __DBL_MAX__; // min_distance is assigned the largest possible double value
-
-			//here we tie the point with the centroid
-			for(j = 0; j < K; j++) {
-				current_distance = findEuclideanDistance3D(data_points[i], centroids[j]);
-
-				if(current_distance < min_distance) {
-					min_distance = current_distance;
-					//assign the ID of the cluster as the number of the centroid
-					data_points[i].ID_cluster = j;
-					isChanged = true;
-				}
-			}
-			//we update the number of point for the centroid
-			centroids[data_points[i].ID_cluster].count_points++;
-
-			//here we start the sum
-			for(j = 0; j < DIMENSIONS; j++){
-				centroids[data_points[i].ID_cluster].sum_coordinates[j] += data_points[i].coordinates[j];
-			}
-
-		}
-
-		//recenter centroid based on its points
-		for(j = 0; j < K; j++) {
-			replaceCentroid(&centroids[j]);
-		}
-
-		(*num_iterations)++;
-
-	}
-
-	return 0;
-
-}
 
 int processClusterParallel(int N_points, int K, point *data_points, centroid *centroids, int *num_iterations) {
-	
+
 	//i centroidi sono gia inizializzati altrove
 
 	*num_iterations = 0;
 	bool isChanged = true;
-	
+
 	int *sum_of_points = calloc(N_CENTROIDS, sizeof(int)); // normal array that hold the number of points bind to each centroid
 	if(sum_of_points == NULL) {
 		printf("Error while allocating space in processClusterParallel function\n");
 		return 1;
 	}
-	
+
 	int length_matrix = N_CENTROIDS*DIMENSIONS;
 	int *sum_of_coordinates_matrix = calloc(length_matrix, sizeof(int)); // matrix that for each centroids hold the sum of the coordinates(separated)
 	if(sum_of_points == NULL) {
 		printf("Error while allocating space in processClusterParallel function\n");
 		return 1;
 	}
-		
+	static int local_sum_of_points[N_CENTROIDS]={};
+	static int local_sum_of_coordinates_matrix [N_CENTROIDS][DIMENSIONS]={};
+
+
 	while(*num_iterations < MAX_ITERATIONS && isChanged) {
-		
+
 		#pragma omp parallel shared(sum_of_coordinates_matrix, sum_of_points, isChanged)
 		{
-		
+
 			double min_distance, current_distance;
 			int i, j;
-		
-			#pragma omp for reduction(+: sum_of_points, sum_of_coordinates_matrix) 
-			
+
+			#pragma omp for reduction(+: local_sum_of_points,local_sum_of_coordinates_matrix)
+
 			for(i = 0; i < N_points; i++) {
 				min_distance = __DBL_MAX__; // min_distance is assigned the largest possible double value
-				
+
 				//here we tie the point with the centroid
 				for(j = 0; j < K; j++) {
-					current_distance = findEuclideanDistance3D(data_points[i], centroids[j]);
-	
+					current_distance = findEuclideanDistance(data_points[i], centroids[j]);
+
 					if(current_distance < min_distance) {
 						min_distance = current_distance;
 						//assign the ID of the cluster as the number of the centroid
@@ -270,29 +217,29 @@ int processClusterParallel(int N_points, int K, point *data_points, centroid *ce
 						isChanged = true;
 					}
 				}
-				
-				//we update the number of point for the centroid			
-				sum_of_points[data_points[i].ID_cluster]++;	
-				
+
+				//we update the number of point for the centroid
+				local_sum_of_points[data_points[i].ID_cluster]++;
+
 				//here we start the sum
 				for(j = 0; j < DIMENSIONS; j++) {
 				//	centroids[data_points[i].ID_cluster].sum_coordinates[j] += data_points[i].coordinates[j];
-					sum_of_coordinates_matrix[(data_points[i].ID_cluster * DIMENSIONS) + j] += data_points[i].coordinates[j];
-					
+				//	sum_of_coordinates_matrix[(data_points[i].ID_cluster * DIMENSIONS) + j] += data_points[i].coordinates[j];
+					local_sum_of_coordinates_matrix[data_points[i].ID_cluster][j]+=data_points[i].coordinates[j];
 				}
-				
-			}	
-			
-		}	
-		
+
+			}
+
+		}
+
 		int i, j;
 		//recenter centroid based on its points
 		for(j = 0; j < K; j++) {
-			centroids[j].count_points = sum_of_points[j];
-			
+			centroids[j].count_points = local_sum_of_points[j];
+
 			for(i = 0; i < DIMENSIONS; i++){
-				centroids[j].sum_coordinates[i] = sum_of_coordinates_matrix[(j * DIMENSIONS) + i];
-				
+				//centroids[j].sum_coordinates[i] = sum_of_coordinates_matrix[(j * DIMENSIONS) + i];
+					centroids[j].sum_coordinates[i] = local_sum_of_coordinates_matrix[j][i];
 			}
 			replaceCentroid(&centroids[j]);
 		}
@@ -307,78 +254,66 @@ int processClusterParallel(int N_points, int K, point *data_points, centroid *ce
 
 }
 
-centroid *kMeanSerial(int k, centroid *centroids, int N_points, point *points, int *num_iterations) {
-	
-	centroids = initializeCentroids(k, centroids, N_points, points);
-	
-	//starting the process of clustering
-	processClusterSerial(N_points, k, points, centroids, num_iterations);
-
-	return centroids;
-}
 
 centroid *initializeCentroids(int k, centroid *centroids, int N_points, point *points) {
-	
+
 	int i, j;
 	centroids = calloc(k, sizeof(*centroids));
 	if (centroids == NULL) {
 			printf("Error calloc\n");
 			exit(1);
-	} 
-	
+	}
+
 	if(N_points < k) {
 		exit(1);
 	}
-	
+
 	//initialize centroids. First k points will be the first k centroids
 	for (i = 0; i < k; i++) {
 		//for each centroid
-		
+
 		for(j = 0; j < DIMENSIONS; j++) {
 			//set coordinates
 			centroids[i].coordinates[j] = points[i].coordinates[j];
 			//printf("%f ", centroids[i].coordinates[j]);
 		}
 		//printf("\n");
-		
+
 	}
-	
+
 	return centroids;
 }
 
-centroid *kMeansParallel(int k, centroid *centroids, int N_points, point *points) {
-	
-	//initialize centroids
-	centroids = initializeCentroids(k, centroids, N_points, points);	
-	
-	omp_set_num_threads(N_THR);
-	
-	
+centroid *kMeansParallel(int k, centroid *centroids, int N_points, point *points,int *num_iterations) {
 
+	//initialize centroids
+	centroids = initializeCentroids(k, centroids, N_points, points);
+
+	omp_set_num_threads(N_THR);
+	processClusterParallel(N_points,k,points,centroids,num_iterations);
+	return centroids;
 }
 
 
 void writeCentroids3D(int K,centroid *c) {
 	FILE *fptr = fopen(OUTPUT_FILE, "w");
-	
+
 	printf("Trying to write on ");
 	printf(OUTPUT_FILE);
 	printf("\n");
-	
+
 	if(fptr == NULL) {
 		printf("Error while opening output file\n");
 	}
-	
+
 	fprintf(fptr, "X Y Z\n");
-	
+
 	int i = 0;
-	
+
 	for (i = 0; i < K; i++) {
 			fprintf(fptr, "%f %f %f\n", c[i].coordinates[0], c[i].coordinates[1], c[i].coordinates[2]);
 
 	}
-	
+
 	fclose(fptr);
 }
-
-
