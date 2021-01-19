@@ -66,7 +66,7 @@ int main(int argc, char const *argv[]) {
 	//printPoints3D(points, 5);
 
 	//k-mean algo
-
+	printf("Parallel Execution\n");
 	double start_time = omp_get_wtime();
 	centroids = kMeansParallel(N_CENTROIDS, centroids, N_points, points,&num_iterations);
 	double end = omp_get_wtime();
