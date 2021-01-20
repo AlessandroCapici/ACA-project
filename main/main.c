@@ -146,12 +146,13 @@ void printPoints3D(point* p, int N) {
 void replaceCentroid(centroid *c) {
 
 	int i;
-	for(i = 0; i < DIMENSIONS; i++){
-		(*c).coordinates[i] = (*c).sum_coordinates[i] / (float) (*c).count_points;
-	//	printf("%f ", (*c).coordinates[i]);
+	float div = (float) (*c).count_points;
+	if(div != 0) {
+		for(i = 0; i < DIMENSIONS; i++){
+			(*c).coordinates[i] = (*c).sum_coordinates[i] / div;			
+		}
 	}
 
-	//printf("\n\n");
 
 }
 
@@ -176,7 +177,7 @@ int processClusterParallel(int N_points, int K, point *data_points, centroid *ce
 	while(*num_iterations < MAX_ITERATIONS && isChanged) {
 		int e, s;
 		/*
-		for(e = 0; e < N_CENTROIDS; e++){
+		for(e = 0; e < K; e++){
 			centroids[e].count_points = 0; 
 				for(s = 0; s < DIMENSIONS; s++){
 					centroids[s].sum_coordinates[s] = 0;
