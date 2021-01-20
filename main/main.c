@@ -11,7 +11,7 @@
 
 #define N_THR 4
 
-#define DATASET_FILE "../datasets/dataset_50000_4.txt"
+#define DATASET_FILE "../datasets/dataset_10000_4.txt"
 #define OUTPUT_FILE "../result/centroid.txt"
 
 //structure definitions
@@ -167,40 +167,31 @@ double findEuclideanDistance(point point, centroid centroid) {
 	return sqrt(sum);
 }
 
-
 int processClusterParallel(int N_points, int K, point *data_points, centroid *centroids, int *num_iterations) {
 
-	//i centroidi sono gia inizializzati altrove
-
 	*num_iterations = 0;
-	bool isChanged = true;
-
-	int *sum_of_points = calloc(N_CENTROIDS, sizeof(int)); // normal array that hold the number of points bind to each centroid
-	if(sum_of_points == NULL) {
-		printf("Error while allocating space in processClusterParallel function\n");
-		return 1;
-	}
-
-	int length_matrix = N_CENTROIDS*DIMENSIONS;
-	int *sum_of_coordinates_matrix = calloc(length_matrix, sizeof(int)); // matrix that for each centroids hold the sum of the coordinates(separated)
-	if(sum_of_points == NULL) {
-		printf("Error while allocating space in processClusterParallel function\n");
-		return 1;
-	}
-	static int local_sum_of_points[N_CENTROIDS]={};
-	static int local_sum_of_coordinates_matrix [N_CENTROIDS][DIMENSIONS]={};
+	bool isChanged = true; // this variable is shared
 
 
 	while(*num_iterations < MAX_ITERATIONS && isChanged) {
-
-		#pragma omp parallel shared(sum_of_coordinates_matrix, sum_of_points, isChanged)
+		int e, s;
+		/*
+		for(e = 0; e < N_CENTROIDS; e++){
+			centroids[e].count_points = 0; 
+				for(s = 0; s < DIMENSIONS; s++){
+					centroids[s].sum_coordinates[s] = 0;
+				}
+		}*/
+		
+		#pragma omp parallel shared(isChanged)
 		{
 
 			double min_distance, current_distance;
 			int i, j;
-
-			#pragma omp for reduction(+: local_sum_of_points,local_sum_of_coordinates_matrix)
-
+			int p_sum_coordinates_matrix[N_CENTROIDS][DIMENSIONS] = {}; // 'p' means 'private' for each thread
+			int p_sum_points[N_CENTROIDS] = {}; 
+			
+			#pragma omp for 
 			for(i = 0; i < N_points; i++) {
 				min_distance = __DBL_MAX__; // min_distance is assigned the largest possible double value
 
@@ -217,36 +208,33 @@ int processClusterParallel(int N_points, int K, point *data_points, centroid *ce
 				}
 
 				//we update the number of point for the centroid
-				local_sum_of_points[data_points[i].ID_cluster]++;
-
+				p_sum_points[data_points[i].ID_cluster]++;
+				
 				//here we start the sum
 				for(j = 0; j < DIMENSIONS; j++) {
-				//	centroids[data_points[i].ID_cluster].sum_coordinates[j] += data_points[i].coordinates[j];
-				//	sum_of_coordinates_matrix[(data_points[i].ID_cluster * DIMENSIONS) + j] += data_points[i].coordinates[j];
-					local_sum_of_coordinates_matrix[data_points[i].ID_cluster][j]+=data_points[i].coordinates[j];
+					p_sum_coordinates_matrix[data_points[i].ID_cluster][j] += data_points[i].coordinates[j];
+					
 				}
 
 			}
 
+			#pragma omp critical
+			for(i = 0; i < N_CENTROIDS; i++){
+				centroids[i].count_points += p_sum_points[i]; 
+				for(j = 0; j < DIMENSIONS; j++){
+					centroids[i].sum_coordinates[j] += p_sum_coordinates_matrix[i][j];
+				}	
+			}
+
 		}
 
-		int i, j;
 		//recenter centroid based on its points
-		for(j = 0; j < K; j++) {
-			centroids[j].count_points = local_sum_of_points[j];
-
-			for(i = 0; i < DIMENSIONS; i++){
-				//centroids[j].sum_coordinates[i] = sum_of_coordinates_matrix[(j * DIMENSIONS) + i];
-					centroids[j].sum_coordinates[i] = local_sum_of_coordinates_matrix[j][i];
-			}
-			replaceCentroid(&centroids[j]);
+		for(e = 0; e < K; e++) {
+			replaceCentroid(&centroids[e]);
 		}
 
 		(*num_iterations)++;
 	}
-
-	free(sum_of_coordinates_matrix);
-	free(sum_of_points);
 
 	return 0;
 
