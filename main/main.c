@@ -5,7 +5,7 @@
 #include <omp.h>
 
 #define DIMENSIONS 3
-#define MAX_ITERATIONS 800
+#define MAX_ITERATIONS 1999
 #define THRESHOLD 1e-4
 #define N_CENTROIDS 3
 #define DATASET_FILE "../datasets/dataset_10000_4.txt"
@@ -143,9 +143,11 @@ void printPoints3D(point* p, int N) {
 void replaceCentroid(centroid *c) {
 
 	int i;
-	for(i = 0; i < DIMENSIONS; i++){
-		(*c).coordinates[i] = (*c).sum_coordinates[i] / (float) (*c).count_points;
-	//	printf("%f ", (*c).coordinates[i]);
+	if ((*c).count_points != 0) {
+		for(i = 0; i < DIMENSIONS; i++){
+			(*c).coordinates[i] = (*c).sum_coordinates[i] / (float) (*c).count_points;
+		}
+
 	}
 
 	//printf("\n\n");
@@ -185,7 +187,14 @@ int processClusterSerial(int N_points, int K, point *data_points, centroid *cent
 		double min_distance, current_distance;
 		isChanged = false;
 		int i, j;
-	
+
+		for (i = 0; i < K; i++) {
+			centroids[i].count_points=0;
+			for (j = 0; j < DIMENSIONS; j++) {
+				centroids[i].sum_coordinates[j]=0;
+			}
+		}
+
 		for(i = 0; i < N_points; i++) {
 			min_distance = __DBL_MAX__; // min_distance is assigned the largest possible double value
 
