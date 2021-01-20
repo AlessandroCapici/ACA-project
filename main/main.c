@@ -5,10 +5,10 @@
 #include <omp.h>
 
 #define DIMENSIONS 3
-#define MAX_ITERATIONS 1000
+#define MAX_ITERATIONS 800
 #define THRESHOLD 1e-4
 #define N_CENTROIDS 3
-#define DATASET_FILE "../datasets/dataset_10000_4.txt "
+#define DATASET_FILE "../datasets/dataset_10000_4.txt"
 #define OUTPUT_FILE "../result/centroid.txt"
 
 //structure definitions
@@ -185,7 +185,7 @@ int processClusterSerial(int N_points, int K, point *data_points, centroid *cent
 		double min_distance, current_distance;
 		isChanged = false;
 		int i, j;
-
+	
 		for(i = 0; i < N_points; i++) {
 			min_distance = __DBL_MAX__; // min_distance is assigned the largest possible double value
 
