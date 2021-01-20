@@ -72,7 +72,7 @@ int main(int argc, char const *argv[]) {
 	double end = omp_get_wtime();
 
 	printf("Done algo. Num of iterations: %d\n", num_iterations);
-	printf("Time needed for serial algorithm: %f\n\n", end - start_time);
+	printf("Time needed for parallel algorithm: %f\n\n", end - start_time);
 
 	//write result
 	writeCentroids3D(N_CENTROIDS, centroids);
