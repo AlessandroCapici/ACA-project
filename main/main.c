@@ -13,6 +13,7 @@
 
 #define DATASET_FILE "../datasets/dataset_10000_4.txt"
 #define OUTPUT_FILE "../result/centroid.txt"
+#define OUTPUT_FILE_TIME "../result/time.txt"
 
 //structure definitions
 typedef struct {
@@ -30,8 +31,9 @@ typedef struct {
 
 //prototip defininitions:
 //IO functions
-point *read_file3D(int *N_points);
+point *read_file3D(int *N_points,char path[50]);
 void writeCentroids3D(int K,centroid *c);
+void writeTime(float time[9], int num_iteration[9], int number_of_point[9]);
 void printPoints3D(point* p, int N);
 
 //distance functions
@@ -51,84 +53,84 @@ int main(int argc, char const *argv[]) {
 
 	int N_points; // number of points from dataset file
 	int num_iterations = 0; // number of iterations needed to end the kmeans algo
-
+	int vector_points[9]={10000,50000,100000,200000,400000,500000,600000,800000,1000000};
+	float time[9];
+	int num_of_iteration[9];
+	char path[50];
+	int loop;
 	//read point from dataset
-	points = read_file3D(&N_points);
+	for (loop = 0; loop < 9; loop++)
+	{
+		sprintf(path,"../datasets/dataset_%d_4.txt",vector_points[loop]);
 
-	if(points != NULL) {
-		printf("File read\nThere are %d points\n\n", N_points);
+		points = read_file3D(&N_points,path);
 
-	} else {
-		printf("Error while reading file\n");
-		return 1;
-	}
+		if(points != NULL) {
+			printf("File read\nThere are %d points\n\n", N_points);
+
+		} else {
+			printf("Error while reading file\n");
+			return 1;
+		}
 
 	//printPoints3D(points, 5);
 
 	//k-mean algo
-	printf("Parallel Execution\n");
-	double start_time = omp_get_wtime();
-	centroids = kMeansParallel(N_CENTROIDS, centroids, N_points, points,&num_iterations);
-	double end = omp_get_wtime();
-
-	printf("Done algo. Num of iterations: %d\n", num_iterations);
-	printf("Time needed for parallel algorithm: %f\n\n", end - start_time);
-
+		printf("Parallel Execution\n");
+		double start_time = omp_get_wtime();
+		centroids = kMeansParallel(N_CENTROIDS, centroids, N_points, points,&num_iterations);
+		double end = omp_get_wtime();
+		time[loop]=end - start_time;
+		num_of_iteration[loop]=num_iterations;
+		num_iterations=0;
 	//write result
-	writeCentroids3D(N_CENTROIDS, centroids);
-
-	if(num_iterations == MAX_ITERATIONS) {
-		printf("It has been reached the max number of iterations possible: %d\n",num_iterations);
-
-	} else {
-		printf("Number of iterations: %d\n",num_iterations);
-
+		//writeCentroids3D(N_CENTROIDS, centroids);
+		free(points);
+		free(centroids);
 	}
-
-	free(points);
-	free(centroids);
+	writeTime(time,num_of_iteration,vector_points);
 
 	return 0;
 }
 
-point *read_file3D(int *N_points) {
+point *read_file3D(int *N_points,char path[50]) {
 
 	FILE *f;
 
 	printf("Trying to open ");
-	printf(DATASET_FILE);
+	printf("%s",path);
 	printf("\n");
 
-	if (!(f=fopen(DATASET_FILE,"r"))) {
+	if (!(f=fopen(path,"r"))) {
 		printf("Error open points file\n");
 		return NULL;
 	}
 
-    point *p;
-    int conv, i=0;
-    char buf[1000];
+	point *p;
+	int conv, i=0;
+	char buf[1000];
 		//remember, the first line is the number of points in the file
-    fgets(buf, sizeof(buf), f);
-    sscanf(buf, "%d",N_points);
+	fgets(buf, sizeof(buf), f);
+	sscanf(buf, "%d",N_points);
 
 		// Each data point is has so many coordinates as DIMENSION
-    if (!(p = malloc((*N_points) * sizeof(*p)))) {
-        return NULL;
-    }
+	if (!(p = malloc((*N_points) * sizeof(*p)))) {
+		return NULL;
+	}
 
-    while (fgets(buf, sizeof(buf), f)) {
+	while (fgets(buf, sizeof(buf), f)) {
 
 		conv = sscanf(buf, "%f %f %f",
-				&p[i].coordinates[0],
-				&p[i].coordinates[1],
-				&p[i].coordinates[2]);
+			&p[i].coordinates[0],
+			&p[i].coordinates[1],
+			&p[i].coordinates[2]);
 
 		p[i].ID_point = i;
 
-  		i++;
-    }
+		i++;
+	}
 
-    return p;
+	return p;
 }
 
 void printPoints3D(point* p, int N) {
@@ -247,8 +249,8 @@ centroid *initializeCentroids(int k, centroid *centroids, int N_points, point *p
 	int i, j;
 	centroids = calloc(k, sizeof(*centroids));
 	if (centroids == NULL) {
-			printf("Error calloc\n");
-			exit(1);
+		printf("Error calloc\n");
+		exit(1);
 	}
 
 	if(N_points < k) {
@@ -298,8 +300,22 @@ void writeCentroids3D(int K,centroid *c) {
 	int i = 0;
 
 	for (i = 0; i < K; i++) {
-			fprintf(fptr, "%f %f %f\n", c[i].coordinates[0], c[i].coordinates[1], c[i].coordinates[2]);
+		fprintf(fptr, "%f %f %f\n", c[i].coordinates[0], c[i].coordinates[1], c[i].coordinates[2]);
 
+	}
+
+	fclose(fptr);
+}
+
+void writeTime(float time[9], int num_iteration[9], int number_of_point[9]) {
+	FILE *fptr = fopen(OUTPUT_FILE_TIME, "w");
+
+	if(fptr == NULL) {
+		printf("Error while opening output file\n");
+	}
+	for (int i = 0; i < 9; ++i)
+	{
+		fprintf(fptr, "total point:%d , time:%f , number of iterations:%d\n",number_of_point[i],time[i],num_iteration[i]);
 	}
 
 	fclose(fptr);
