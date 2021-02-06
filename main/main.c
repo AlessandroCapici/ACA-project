@@ -11,7 +11,7 @@
 
 #define N_THR 4
 
-#define DATASET_FILE "../datasets/dataset_10000_4.txt"
+#define DATASET_FILE "../datasets/big_dataset.txt"
 #define OUTPUT_FILE "../result/centroid.txt"
 #define OUTPUT_FILE_TIME "../result/time.txt"
 
@@ -31,9 +31,9 @@ typedef struct {
 
 //prototip defininitions:
 //IO functions
-point *read_file3D(int *N_points,char path[50]);
+point *read_file3D(int *N_points);
 void writeCentroids3D(int K,centroid *c);
-void writeTime(float time[9], int num_iteration[9], int number_of_point[9]);
+void writeTime(float time[5], int num_iteration[5], int number_of_thread[5]);
 void printPoints3D(point* p, int N);
 
 //distance functions
@@ -43,7 +43,7 @@ double findEuclideanDistance(point point, centroid centroid);
 //k-mean algorithm functions
 void replaceCentroid(centroid *c);
 centroid *initializeCentroids(int k, centroid *centroids, int N_points, point *points);
-centroid *kMeansParallel(int k, centroid *centroids, int N_points, point *points,int *num_iterations);
+centroid *kMeansParallel(int k, centroid *centroids, int N_points, point *points,int *num_iterations,int num_thread);
 int processClusterParallel(int N_points, int K, point *data_points, centroid *centroids, int *num_iterations);
 
 int main(int argc, char const *argv[]) {
@@ -53,32 +53,29 @@ int main(int argc, char const *argv[]) {
 
 	int N_points; // number of points from dataset file
 	int num_iterations = 0; // number of iterations needed to end the kmeans algo
-	int vector_points[9]={10000,50000,100000,200000,400000,500000,600000,800000,1000000};
-	float time[9];
-	int num_of_iteration[9];
-	char path[50];
+	int vector_thread[5]={2,4,8,12,16};
+	float time[5];
+	int num_of_iteration[5];
 	int loop;
 	//read point from dataset
-	for (loop = 0; loop < 9; loop++)
-	{
-		sprintf(path,"../datasets/dataset_%d_4.txt",vector_points[loop]);
+	
+	points = read_file3D(&N_points);
 
-		points = read_file3D(&N_points,path);
+	if(points != NULL) {
+		printf("File read\nThere are %d points\n\n", N_points);
 
-		if(points != NULL) {
-			printf("File read\nThere are %d points\n\n", N_points);
-
-		} else {
-			printf("Error while reading file\n");
-			return 1;
-		}
+	} else {
+		printf("Error while reading file\n");
+		return 1;
+	}
 
 	//printPoints3D(points, 5);
-
+	for (loop = 0; loop < 5; loop++)
+	{
 	//k-mean algo
 		printf("Parallel Execution\n");
 		double start_time = omp_get_wtime();
-		centroids = kMeansParallel(N_CENTROIDS, centroids, N_points, points,&num_iterations);
+		centroids = kMeansParallel(N_CENTROIDS, centroids, N_points, points,&num_iterations,vector_thread[loop]);
 		double end = omp_get_wtime();
 		time[loop]=end - start_time;
 		num_of_iteration[loop]=num_iterations;
@@ -88,20 +85,20 @@ int main(int argc, char const *argv[]) {
 		free(points);
 		free(centroids);
 	}
-	writeTime(time,num_of_iteration,vector_points);
+	writeTime(time,num_of_iteration,vector_thread);
 
 	return 0;
 }
 
-point *read_file3D(int *N_points,char path[50]) {
+point *read_file3D(int *N_points) {
 
 	FILE *f;
 
 	printf("Trying to open ");
-	printf("%s",path);
+	printf("%s",DATASET_FILE);
 	printf("\n");
 
-	if (!(f=fopen(path,"r"))) {
+	if (!(f=fopen(DATASET_FILE,"r"))) {
 		printf("Error open points file\n");
 		return NULL;
 	}
@@ -273,12 +270,12 @@ centroid *initializeCentroids(int k, centroid *centroids, int N_points, point *p
 	return centroids;
 }
 
-centroid *kMeansParallel(int k, centroid *centroids, int N_points, point *points,int *num_iterations) {
+centroid *kMeansParallel(int k, centroid *centroids, int N_points, point *points,int *num_iterations,int num_thread) {
 
 	//initialize centroids
 	centroids = initializeCentroids(k, centroids, N_points, points);
 
-	omp_set_num_threads(N_THR);
+	omp_set_num_threads(num_thread);
 	processClusterParallel(N_points,k,points,centroids,num_iterations);
 	return centroids;
 }
@@ -307,15 +304,15 @@ void writeCentroids3D(int K,centroid *c) {
 	fclose(fptr);
 }
 
-void writeTime(float time[9], int num_iteration[9], int number_of_point[9]) {
+void writeTime(float time[5], int num_iteration[5], int number_of_thread[5]) {
 	FILE *fptr = fopen(OUTPUT_FILE_TIME, "w");
 
 	if(fptr == NULL) {
 		printf("Error while opening output file\n");
 	}
-	for (int i = 0; i < 9; ++i)
+	for (int i = 0; i < 5; ++i)
 	{
-		fprintf(fptr, "total point:%d , time:%f , number of iterations:%d\n",number_of_point[i],time[i],num_iteration[i]);
+		fprintf(fptr, "total point:%d , time:%f , number of iterations:%d\n",number_of_thread[i],time[i],num_iteration[i]);
 	}
 
 	fclose(fptr);
