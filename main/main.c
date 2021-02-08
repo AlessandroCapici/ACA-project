@@ -8,7 +8,7 @@
 #define MAX_ITERATIONS 800
 #define THRESHOLD 1e-4
 #define N_CENTROIDS 3
-#define DATASET_FILE "../datasets/big_dataset.txt"
+#define DATASET_FILE "../datasets/dataset_1000000_4.txt"
 #define OUTPUT_FILE "../result/centroid.txt"
 #define OUTPUT_FILE_TIME "../result/time.txt"
 
@@ -185,7 +185,9 @@ int processClusterSerial(int N_points, int K, point *data_points, centroid *cent
 
 			//here we tie the point with the centroid
 			for(j = 0; j < K; j++) {
-				current_distance = findEuclideanDistance3D(data_points[i], centroids[j]);
+				current_distance = pow(((double) (data_points[i].coordinates[0] - centroids[j].coordinates[0])), 2)
+				+ pow(((double) (data_points[i].coordinates[1] - centroids[j].coordinates[1])), 2)
+				+ pow(((double) (data_points[i].coordinates[2] - centroids[j].coordinates[2])), 2);
 
 				if(current_distance < min_distance) {
 					min_distance = current_distance;
