@@ -8,7 +8,7 @@
 #define MAX_ITERATIONS 800
 #define THRESHOLD 1e-4
 #define N_CENTROIDS 3
-#define DATASET_FILE "../datasets/dataset_1000000_4.txt"
+#define DATASET_FILE "../datasets/dataset_10000_4.txt"
 #define OUTPUT_FILE "../result/centroid.txt"
 #define OUTPUT_FILE_TIME "../result/time.txt"
 
@@ -289,7 +289,9 @@ void writeTime(float time[9], int num_iteration[9], int number_of_point[9]) {
 	if(fptr == NULL) {
 		printf("Error while opening output file\n");
 	}
-	for (int i = 0; i < 9; ++i)
+	
+	int i;
+	for (i = 0; i < 9; ++i)
 	{
 		fprintf(fptr, "total point:%d , time:%f , number of iterations:%d\n",number_of_point[i],time[i],num_iteration[i]);
 	}
