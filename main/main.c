@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <math.h>
 #include <stdbool.h>
 #include <omp.h>
@@ -13,7 +14,7 @@
 
 #define DATASET_FILE "../datasets/dataset_10000_4.txt"
 #define OUTPUT_FILE "../result/centroid.txt"
-#define OUTPUT_FILE_TIME "../result/time.txt"
+#define OUTPUT_FILE_TIME "../result/time_"
 
 //structure definitions
 typedef struct {
@@ -33,7 +34,7 @@ typedef struct {
 //IO functions
 point *read_file3D(int *N_points);
 void writeCentroids3D(int K,centroid *c);
-void writeTime(float time[5], int num_iteration[5], int number_of_thread[5]);
+void writeTime(float time[5], int num_iteration[5], int number_of_thread[5], int N_points);
 void printPoints3D(point* p, int N);
 
 //distance functions
@@ -86,7 +87,7 @@ int main(int argc, char const *argv[]) {
 	}
 	
 	free(points);
-	writeTime(time,num_of_iteration,vector_thread);
+	writeTime(time,num_of_iteration, vector_thread, N_points);
 
 	return 0;
 }
@@ -305,8 +306,17 @@ void writeCentroids3D(int K,centroid *c) {
 	fclose(fptr);
 }
 
-void writeTime(float time[5], int num_iteration[5], int number_of_thread[5]) {
-	FILE *fptr = fopen(OUTPUT_FILE_TIME, "w");
+void writeTime(float time[5], int num_iteration[5], int number_of_thread[5], int N_points) {
+	
+	char buff[50];
+	char buff2[50] = OUTPUT_FILE_TIME;
+	
+	sprintf(buff, "%d", N_points);
+	
+	strcat(buff2, buff);
+	strcat(buff2, ".txt");
+	
+	FILE *fptr = fopen(buff2, "w");
 
 	if(fptr == NULL) {
 		printf("Error while opening output file\n");

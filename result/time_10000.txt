@@ -1,0 +1,5 @@
+total point:1 , time:2.478000 , number of iterations:800
+total point:4 , time:1.641000 , number of iterations:800
+total point:8 , time:1.735000 , number of iterations:800
+total point:12 , time:1.766000 , number of iterations:800
+total point:16 , time:1.811000 , number of iterations:800
