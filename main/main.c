@@ -12,7 +12,7 @@
 
 #define N_THR 4
 
-#define DATASET_FILE "../datasets/dataset_10000_4.txt"
+#define DATASET_FILE "../datasets/dataset_100000_4.txt"
 #define OUTPUT_FILE "../result/centroid.txt"
 #define OUTPUT_FILE_TIME "../result/time_"
 
@@ -54,7 +54,7 @@ int main(int argc, char const *argv[]) {
 
 	int N_points; // number of points from dataset file
 	int num_iterations = 0; // number of iterations needed to end the kmeans algo
-	int vector_thread[5]={1,4,8,12,16};
+	int vector_thread[5]={4,8,12,16};
 	float time[5];
 	int num_of_iteration[5];
 	int loop;
