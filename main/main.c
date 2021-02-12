@@ -171,7 +171,12 @@ int processClusterParallel(int N_points, int K, point *data_points, centroid *ce
 
 	*num_iterations = 0;
 	bool isChanged = true; // this variable is shared
-
+	
+	int i, j;
+	double min_distance, current_distance;
+	int p_sum_coordinates_matrix[N_CENTROIDS][DIMENSIONS] = {}; // 'p' means 'private' for each thread
+	int p_sum_points[N_CENTROIDS] = {}; 
+			
 
 	while(*num_iterations < MAX_ITERATIONS && isChanged) {
 		int e, s;
@@ -183,13 +188,9 @@ int processClusterParallel(int N_points, int K, point *data_points, centroid *ce
 				}
 		}
 		
-		#pragma omp parallel shared(isChanged)
+		#pragma omp parallel shared(isChanged) private(i, j, min_distance, current_distance, p_sum_coordinates_matrix, p_sum_points)
 		{
 
-			double min_distance, current_distance;
-			int i, j;
-			int p_sum_coordinates_matrix[N_CENTROIDS][DIMENSIONS] = {}; // 'p' means 'private' for each thread
-			int p_sum_points[N_CENTROIDS] = {}; 
 			
 			#pragma omp for 
 			for(i = 0; i < N_points; i++) {
@@ -310,7 +311,8 @@ void writeTime(float time[5], int num_iteration[5], int number_of_thread[5]) {
 	if(fptr == NULL) {
 		printf("Error while opening output file\n");
 	}
-	for (int i = 0; i < 5; ++i)
+	int i; 
+	for (i = 0; i < 5; ++i)
 	{
 		fprintf(fptr, "total point:%d , time:%f , number of iterations:%d\n",number_of_thread[i],time[i],num_iteration[i]);
 	}
