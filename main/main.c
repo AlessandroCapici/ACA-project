@@ -175,13 +175,13 @@ int processClusterParallel(int N_points, int K, point *data_points, centroid *ce
 
 	while(*num_iterations < MAX_ITERATIONS && isChanged) {
 		int e, s;
-		/*
+		
 		for(e = 0; e < K; e++){
 			centroids[e].count_points = 0; 
 				for(s = 0; s < DIMENSIONS; s++){
 					centroids[s].sum_coordinates[s] = 0;
 				}
-		}*/
+		}
 		
 		#pragma omp parallel shared(isChanged)
 		{
