@@ -11,7 +11,7 @@
 
 #define N_THR 4
 
-#define DATASET_FILE "../datasets/big_dataset.txt"
+#define DATASET_FILE "../datasets/dataset_10000_4.txt"
 #define OUTPUT_FILE "../result/centroid.txt"
 #define OUTPUT_FILE_TIME "../result/time.txt"
 
@@ -53,7 +53,7 @@ int main(int argc, char const *argv[]) {
 
 	int N_points; // number of points from dataset file
 	int num_iterations = 0; // number of iterations needed to end the kmeans algo
-	int vector_thread[5]={2,4,8,12,16};
+	int vector_thread[5]={1,4,8,12,16};
 	float time[5];
 	int num_of_iteration[5];
 	int loop;
@@ -80,11 +80,12 @@ int main(int argc, char const *argv[]) {
 		time[loop]=end - start_time;
 		num_of_iteration[loop]=num_iterations;
 		num_iterations=0;
-	//write result
+		//write result
 		//writeCentroids3D(N_CENTROIDS, centroids);
-		free(points);
 		free(centroids);
 	}
+	
+	free(points);
 	writeTime(time,num_of_iteration,vector_thread);
 
 	return 0;
@@ -191,7 +192,6 @@ int processClusterParallel(int N_points, int K, point *data_points, centroid *ce
 		#pragma omp parallel shared(isChanged) private(i, j, min_distance, current_distance, p_sum_coordinates_matrix, p_sum_points)
 		{
 
-			
 			#pragma omp for 
 			for(i = 0; i < N_points; i++) {
 				min_distance = __DBL_MAX__; // min_distance is assigned the largest possible double value
