@@ -7,8 +7,8 @@
 #define DIMENSIONS 3
 #define MAX_ITERATIONS 800
 #define THRESHOLD 1e-4
-#define N_CENTROIDS 3
-#define DATASET_FILE "../datasets/dataset_10000_4.txt"
+#define N_CENTROIDS 30
+#define DATASET_FILE "datasets/dataset_10000_4.txt"
 #define OUTPUT_FILE "../result/centroid.txt"
 #define OUTPUT_FILE_TIME "../result/time.txt"
 
@@ -40,6 +40,7 @@ double findEuclideanDistance(point point, centroid centroid);
 //k-mean algorithm functions
 int processClusterSerial(int N_points, int K, point *data_points, centroid *centroids, int *num_iterations);
 void replaceCentroid(centroid *c);
+void sumCoordinates(centroid *centroids,point *data_points);
 centroid *kMeanSerial(int k, centroid *centroids, int N_points, point *points, int *num_iterations);
 centroid *initializeCentroids(int k, centroid *centroids, int N_points, point *points);
 
@@ -70,11 +71,14 @@ int main(int argc, char const *argv[]) {
 	double end = omp_get_wtime();
 	printf("%f\n",end-start_time);
 	//write result
-	writeCentroids3D(N_CENTROIDS, centroids);
+	//writeCentroids3D(N_CENTROIDS, centroids);
 	free(points);
 	free(centroids);
 
 	return 0;
+}
+void sumCoordinates(centroid *centroids,point *data_points){
+	
 }
 
 point *read_file3D(int *N_points,char path[50]) {
@@ -185,9 +189,7 @@ int processClusterSerial(int N_points, int K, point *data_points, centroid *cent
 
 			//here we tie the point with the centroid
 			for(j = 0; j < K; j++) {
-				current_distance = pow(((double) (data_points[i].coordinates[0] - centroids[j].coordinates[0])), 2)
-				+ pow(((double) (data_points[i].coordinates[1] - centroids[j].coordinates[1])), 2)
-				+ pow(((double) (data_points[i].coordinates[2] - centroids[j].coordinates[2])), 2);
+				current_distance = findEuclideanDistance3D(data_points[i], centroids[j]);
 
 				if(current_distance < min_distance) {
 					min_distance = current_distance;
@@ -200,6 +202,7 @@ int processClusterSerial(int N_points, int K, point *data_points, centroid *cent
 			centroids[data_points[i].ID_cluster].count_points++;
 
 			//here we start the sum
+			
 			for(j = 0; j < DIMENSIONS; j++){
 				centroids[data_points[i].ID_cluster].sum_coordinates[j] += data_points[i].coordinates[j];
 			}
@@ -289,7 +292,6 @@ void writeTime(float time[9], int num_iteration[9], int number_of_point[9]) {
 	if(fptr == NULL) {
 		printf("Error while opening output file\n");
 	}
-	
 	int i;
 	for (i = 0; i < 9; ++i)
 	{
