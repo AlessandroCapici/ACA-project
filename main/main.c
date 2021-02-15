@@ -200,7 +200,7 @@ int processClusterSerial(int N_points, int K, point *data_points, centroid *cent
 			//we update the number of point for the centroid
 			centroids[data_points[i].ID_cluster].count_points++;
 
-			//here we start the sum		
+			//here we start the sum			
 			sum_coordinates(centroids, data_points, i);
 
 		}
