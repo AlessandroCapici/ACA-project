@@ -183,7 +183,7 @@ int processClusterParallel(int N_points, int K, point *data_points, centroid *ce
 				min_distance = __DBL_MAX__; // min_distance is assigned the largest possible double value
 				//here we tie the point with the centroid
 				for(j = 0; j < K; j++) {
-					current_distance = sqrt(pow((double) (data_points[i].coordinates[0] - centroids[j].coordinates[0]), 2)+pow((double) (data_points[i].coordinates[1] - centroids[j].coordinates[1]), 2)+pow((double) (data_points[i].coordinates[2] - centroids[j].coordinates[2]), 2));
+					current_distance = findEuclideanDistance(data_points[i],centroids[j]);
 					if(current_distance < min_distance) {
 						min_distance = current_distance;
 						//assign the ID of the cluster as the number of the centroid
