@@ -8,7 +8,7 @@
 #define MAX_ITERATIONS 800
 #define THRESHOLD 1e-4
 #define N_CENTROIDS 30
-#define DATASET_FILE "datasets/dataset_10000_4.txt"
+#define DATASET_FILE "../datasets/dataset_10000_4.txt"
 #define OUTPUT_FILE "../result/centroid.txt"
 #define OUTPUT_FILE_TIME "../result/time.txt"
 
@@ -43,6 +43,7 @@ void replaceCentroid(centroid *c);
 void sumCoordinates(centroid *centroids,point *data_points);
 centroid *kMeanSerial(int k, centroid *centroids, int N_points, point *points, int *num_iterations);
 centroid *initializeCentroids(int k, centroid *centroids, int N_points, point *points);
+void sum_coordinates(centroid *centroids, point *data_points, int index);
 
 int main(int argc, char const *argv[]) {
 
@@ -77,9 +78,7 @@ int main(int argc, char const *argv[]) {
 
 	return 0;
 }
-void sumCoordinates(centroid *centroids,point *data_points){
-	
-}
+
 
 point *read_file3D(int *N_points,char path[50]) {
 
@@ -202,10 +201,12 @@ int processClusterSerial(int N_points, int K, point *data_points, centroid *cent
 			centroids[data_points[i].ID_cluster].count_points++;
 
 			//here we start the sum
-			
+
+			/* Versione vecchia
 			for(j = 0; j < DIMENSIONS; j++){
 				centroids[data_points[i].ID_cluster].sum_coordinates[j] += data_points[i].coordinates[j];
-			}
+			}*/			
+			sum_coordinates(centroids, data_points, i);
 
 		}
 
@@ -220,6 +221,15 @@ int processClusterSerial(int N_points, int K, point *data_points, centroid *cent
 
 	return 0;
 
+}
+
+void sum_coordinates(centroid *centroids, point *data_points, int index) {
+	int j;
+	
+	for(j = 0; j < DIMENSIONS; j++) {
+		centroids[data_points[index].ID_cluster].sum_coordinates[j] += data_points[index].coordinates[j];
+	}
+	
 }
 
 centroid *kMeanSerial(int k, centroid *centroids, int N_points, point *points, int *num_iterations) {
