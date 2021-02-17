@@ -7,8 +7,8 @@
 #define DIMENSIONS 3
 #define MAX_ITERATIONS 800
 #define THRESHOLD 1e-4
-#define N_CENTROIDS 30
-#define DATASET_FILE "../datasets/dataset_10000_4.txt"
+#define N_CENTROIDS 3
+#define DATASET_FILE "../datasets/dataset_200000_4.txt"
 #define OUTPUT_FILE "../result/centroid.txt"
 #define OUTPUT_FILE_TIME "../result/time.txt"
 
@@ -72,7 +72,7 @@ int main(int argc, char const *argv[]) {
 	double end = omp_get_wtime();
 	printf("%f\n",end-start_time);
 	//write result
-	//writeCentroids3D(N_CENTROIDS, centroids);
+	writeCentroids3D(N_CENTROIDS, centroids);
 	free(points);
 	free(centroids);
 
